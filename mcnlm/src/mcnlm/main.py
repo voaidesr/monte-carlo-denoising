@@ -3,6 +3,7 @@ import cv2
 import matplotlib.pyplot as plt
 
 from mcnlm.noise_estimator import NoiseEstimator
+import mcnlm.naive_nlm as naive_nlm
 
 def add_gaussian_noise(image, sigma, mean=0):
     gauss = np.random.normal(mean, sigma, image.shape).astype(np.float32)
@@ -60,3 +61,5 @@ def main():
     print(os.getcwd())
     print("MCNLM")
     test_noise_extraction()
+    print("Naive NLM")
+    naive_nlm.test_naive_nlm()
