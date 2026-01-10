@@ -1,5 +1,5 @@
 # docs 
 ./docs/build/
 .venv
-
-
+**/__pycache__/
+*.pyc
