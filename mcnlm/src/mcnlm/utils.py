@@ -25,7 +25,7 @@ def mse(img1, img2):
     """
     return np.mean((img1 - img2) ** 2)
 
-def psnr(img1, img2, max_pixel=1.0):
+def psnr(img1, img2, max_pixel=255.0):
     """
     Compute PSNR (Peak Signal-to-Noise Ratio) between two images.
     """

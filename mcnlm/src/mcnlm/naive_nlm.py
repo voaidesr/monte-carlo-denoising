@@ -1,9 +1,13 @@
 import numpy as np
-import matplotlib.pyplot as plt
-import cv2
 from numba import njit, prange
+from dataclasses import dataclass
 
-from mcnlm.utils import load_image, add_gaussian_noise, show_results
+@dataclass
+class NLMParams:
+    sigma: float          # Standard deviation of the noise
+    patch_radius: int    # Radius of the patches (f)
+    search_radius: int   # Radius of the search window (r)
+    h_factor: float      # Filtering parameter factor
 
 # https://www.ipol.im/pub/art/2011/bcm_nlm/article.pdf
 
@@ -39,8 +43,7 @@ def euclidean_distance(noisy_image, p, q, f):
 
 # Weight function
 @njit
-def w(noisy_image, p, q, sigma, h):
-    f = 1  # Patch radius
+def w(noisy_image, p, q, f, sigma, h):
     d2 = euclidean_distance(noisy_image, p, q, f)
     weight = np.exp(-max(d2 - 2 * sigma**2, 0.0) / (h**2))
     return weight
@@ -54,28 +57,26 @@ def w(noisy_image, p, q, sigma, h):
 # window is increased to 35 x 35 for large values of σ due to the necessity of finding more similar pixels
 # to reduce further the noise
 @njit
-def C(noisy_image, p, r, sigma, h):
+def C(noisy_image, p, r, f, sigma, h):
     normalizing_factor = 0.0
     for i in range(-r, r + 1):
         for j in range(-r, r + 1):
             q = (p[0] + i, p[1] + j)
             # Make sure q is within image boundaries
             if 0 <= q[0] < noisy_image.shape[0] and 0 <= q[1] < noisy_image.shape[1]:
-                normalizing_factor += w(noisy_image, p, q, sigma, h)
+                normalizing_factor += w(noisy_image, p, q, f, sigma, h)
     return normalizing_factor
 
 
 # Non-Local Means Denoising
 @njit(parallel=True)
-def nlm_denoising(noisy_image, sigma, h):
+def nlm_denoising(noisy_image, r, f, sigma, h):
     denoised_image = np.zeros_like(noisy_image)
-    r = 10  # 21x21 search window
 
     for i in prange(noisy_image.shape[0]):
-        # print(f"Processing row {i + 1}/{noisy_image.shape[0]}", end="\r")
         for j in range(noisy_image.shape[1]):
             p = (i, j)
-            C_p_r = C(noisy_image, p, r, sigma, h)
+            C_p_r = C(noisy_image, p, r, f, sigma, h)
             pixel_value = 0.0
 
             for m in range(-r, r + 1):
@@ -86,27 +87,18 @@ def nlm_denoising(noisy_image, sigma, h):
                         0 <= q[0] < noisy_image.shape[0]
                         and 0 <= q[1] < noisy_image.shape[1]
                     ):
-                        pixel_value += w(noisy_image, p, q, sigma, h) * noisy_image[q[0], q[1]]
+                        pixel_value += w(noisy_image, p, q, f, sigma, h) * noisy_image[q[0], q[1]]
 
             denoised_image[i, j] = pixel_value / C_p_r
 
     return denoised_image
 
 
-def test_naive_nlm():
-    image = load_image("imgs/clock.tiff")
+def test_naive_nlm(noisy_image, params: NLMParams):
+    padded = np.pad(noisy_image, params.search_radius + params.patch_radius, mode='reflect')
+    denoised = nlm_denoising(padded, params.search_radius, params.patch_radius, params.sigma, params.h_factor * params.sigma)
 
-    # Resize to 256x256 for faster computation
-    image = cv2.resize(image, (256, 256))
-
-    SIGMA = 15
-    noisy_image = add_gaussian_noise(image * 255, sigma=SIGMA)
-    noisy_image = noisy_image.astype(np.float64) / 255.0
-
-    CALCULATED_SIGMA = SIGMA / 255.0
-    h = 0.4 * CALCULATED_SIGMA  # This is taken from the paper linked above
-
-    denoised_image = nlm_denoising(noisy_image, CALCULATED_SIGMA, h)
-    image = image.astype(np.float64) / 255.0 # Normalize original image
-
-    show_results(image, noisy_image, denoised_image)
+    # Remove padding
+    total_pad = params.search_radius + params.patch_radius
+    denoised = denoised[total_pad:-total_pad, total_pad:-total_pad]
+    return denoised

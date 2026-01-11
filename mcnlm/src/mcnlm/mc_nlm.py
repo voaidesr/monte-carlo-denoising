@@ -21,10 +21,6 @@ class MCNLMParams:
     def patch_radius(self):
         return self.patch_size // 2
 
-    @property
-    def h_r(self):
-        return self.h_factor * self.patch_size * self.sigma
-
 # MCNLM Kernel 
 def mcnlm_local(y_patch, window_patches, window_coords, params):
     n = len(window_patches)
@@ -36,7 +32,7 @@ def mcnlm_local(y_patch, window_patches, window_coords, params):
     patches = window_patches[mask]
     coords  = window_coords[mask]
 
-    h = params.h_factor * params.sigma * params.patch_size
+    h = params.h_factor * params.sigma
     h2 = h * h
     sigma2 = params.sigma * params.sigma
 
@@ -48,7 +44,7 @@ def mcnlm_local(y_patch, window_patches, window_coords, params):
     spatial_d2 = np.sum(coords * coords, axis=1)
     w_s = np.exp(-spatial_d2 / (2.0 * params.spatial_sigma**2))
     
-    w = w_r * w_s
+    w = w_r
     
     s = np.sum(w)
     if s == 0.0:
@@ -87,8 +83,6 @@ def mcnlm_denoise(noisy, params):
 
     padded = np.pad(noisy, total_pad, mode="reflect")
     coords = window_coords(rho)
-
-    print(f"MC-NLM with search window {2 * rho + 1}×{2 * rho + 1}")
 
     for i in range(h):
         print(f"Row {i + 1}/{h}", end="\r")
