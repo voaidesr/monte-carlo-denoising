@@ -1,8 +1,9 @@
-# docs
-./docs/build/*
+docs/build/*
 *aux
 *log
 *out
+*.bbl
+*.blg
 
 .venv
 **/__pycache__/
