@@ -2,9 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import cv2
 
-from mcnlm.utils import add_gaussian_noise
-
-image = cv2.imread("imgs/man.tiff", cv2.IMREAD_GRAYSCALE)
+image = cv2.imread("mcnlm/imgs/clock.tiff", cv2.IMREAD_GRAYSCALE)
 if image is None:
     raise ValueError("Failed to load image")
 
@@ -12,7 +10,12 @@ if image is None:
 image = cv2.resize(image, (256, 256))
 
 SIGMA = 15
-noisy_image = add_gaussian_noise(image, sigma=SIGMA)
+gauss = np.random.normal(0, SIGMA, image.shape).astype(np.float32)
+noisy_image = cv2.add(image.astype(np.float32), gauss)
+noisy_image = np.clip(noisy_image, 0, 255).astype(np.uint8)
+
+# save image 
+cv2.imwrite("mcnlm/imgs/noisy_clock.tiff", noisy_image)
 
 noisy_image = noisy_image.astype(np.float32) / 255.0
 image = image.astype(np.float32) / 255.0
@@ -134,5 +137,5 @@ def test_naive_nlm():
     plt.show()
 
 
-# if __name__ == "__main__":
-#     test_naive_nlm()
+if __name__ == "__main__":
+    test_naive_nlm()

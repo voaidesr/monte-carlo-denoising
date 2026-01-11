@@ -11,18 +11,21 @@ def run_mc_convergence(image_path, xis):
     """
     image = load_image(image_path)
     sigma = 17
+    h_factor = 0.4
     noisy = add_gaussian_noise(image * 255, sigma=sigma).astype(np.float32) / 255.0
 
-    nlm_params = naive_nlm.NLMParams(
-        sigma =  sigma / 255.0,
-        h_factor = 0.4,
-        patch_radius = 2,
-        search_radius = 10
-    )
+    # Modify here to integrate matteo
+    
+    # nlm_params = naive_nlm.NLMParams(
+    #     sigma =  sigma / 255.0,
+    #     h_factor = 0.4,
+    #     patch_radius = 2,
+    #     search_radius = 10
+    # )
     
     # compute naive NLM
     print("Computing naive NLM...")
-    nlm_ref = naive_nlm.nlm_denoise(noisy, nlm_params)
+    nlm_ref = naive_nlm.nlm_denoising(noisy, sigma, h_factor)
     naive_clean_mse = mse(nlm_ref, image)
     naive_clean_psnr = psnr(nlm_ref, image)
 
