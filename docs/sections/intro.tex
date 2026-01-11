@@ -1,5 +1,38 @@
 \section{Introduction}
 
-This is a simple LaTeX documentation project.
+Image noise is a random variation of brightness or color information. In most real-life cases, it can be modeled as additive white Gaussian noise:
 
-You can add more sections in the \texttt{sections/} directory and include them in \texttt{main.tex}.
+\[
+y = x + \eta
+\]
+
+Where $y$ is the noisy pixel, $x$ the pure pixel and $\eta \sim \mathcal{N}(0, \sigma)$ is the noise.
+
+\subsection{Denoising Techniques}
+Traditional denoising techniques, such as Gaussian smoothing, Median filtering or Local means, operate on the principle of locality, assuming that the true value of the pixel must be similar to the values of its neighbours. This is effective at removing noise, but it also leads to loss of fine textures and blurring of edges.
+
+The Non-Local Means estimates the true value of the pixel by computing a wieghted average of different patches, using a weight function that prioritizes pixels with similar structural patterns.
+
+Given a noisy pixel, the surrounding patch $\mathbf{y}$ will be used to check for similarity with other patches. This object can be flattened into a d-pixel: $\mathbf{y} \in \mathbb{R}^d$.
+
+The algorithm requires a set of patches $\mathcal{X} = \{ \mathbf{x}_1, \dots, \mathbf{x}_n \}$ that are obtained from reference images.
+
+NLM replaces the noisy pixel with the weighted average of pixels in the reference set:
+
+\[
+z = \frac{
+    \sum_{i = 1}^n w_i x_i
+}{
+    \sum_{i = 1}^n w_i
+}
+\]
+
+\noindent where $x_i$ represents the center pixel in the patch $\mathbf{x_i}$, and the weight $w_i$ measures the similarity between the match $\mathbf{y}$ and $\mathbf{x_i}$.
+
+A standard choice for the weight function is:
+
+$$
+w_i = e^{
+    - || \mathbf{y} - \mathbf{x_i} ||^2 / (2h_r^2)
+}
+$$

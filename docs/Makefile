@@ -4,12 +4,14 @@ BUILD = build
 LATEX = pdflatex
 LATEXFLAGS = -interaction=nonstopmode -halt-on-error -output-directory=$(BUILD)
 
-SRC = $(PROJECT).tex sections/intro.tex
+SRC = $(PROJECT).tex sections/abstract.tex sections/intro.tex sections/biblio.tex references.bib
 
 all: pdf
 
 pdf: $(SRC)
 	mkdir -p $(BUILD)
+	$(LATEX) $(LATEXFLAGS) $(PROJECT).tex
+	bibtex $(BUILD)/$(PROJECT)
 	$(LATEX) $(LATEXFLAGS) $(PROJECT).tex
 	$(LATEX) $(LATEXFLAGS) $(PROJECT).tex
 
