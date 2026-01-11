@@ -7,6 +7,3 @@ import numpy as np
 def main():
     # mc_convergence()
     naive_nlm.test_naive_nlm()
-    
-
-    
