@@ -6,7 +6,6 @@ import mcnlm.mc_nlm as mc_nlm
 import mcnlm.naive_nlm as naive_nlm
 
 
-
 def run_mc_convergence(img_path, sigma, xis, patch_size=5, search_radius=15, h_factor=0.8, seed=0):
     """
     Run MCNLM for different sampling probabilities and compute MSE between MC method and naive NLM.
@@ -60,7 +59,7 @@ def run_mc_convergence(img_path, sigma, xis, patch_size=5, search_radius=15, h_f
 def mc_convergence():
     probs = np.linspace(0, 1, 13)
     print('Testing convergence for probs: ', probs)
-    xis, mc_clean_errors, mc_naive_errors, naive_mse = run_mc_convergence(img_path="imgs/clock.tiff", sigma=17/255, xis = probs)
+    xis, mc_clean_errors, mc_naive_errors, naive_mse = run_mc_convergence(img_path="imgs/man.tiff", sigma=17/255, xis = probs)
     
     plt.figure(figsize=(7,5))
     
