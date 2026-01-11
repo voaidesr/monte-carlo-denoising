@@ -5,7 +5,5 @@ from mcnlm.mc_convergence import mc_convergence
 import numpy as np
 
 def main():
-    mc_convergence()
-    
-
-    
+    # mc_convergence()
+    naive_nlm.test_naive_nlm()

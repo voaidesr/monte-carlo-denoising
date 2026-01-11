@@ -11,6 +11,14 @@ def load_image(path, fallback_size=(100, 100)):
         cv2.circle(img, (50, 50), 30, 1, -1)
     return img.astype(np.float64) / 255.0
 
+def save_image(path, image):
+    """
+    Save an image to the specified path.
+    """
+    # Ensure the image is in the range [0, 255] and of type uint8
+    img_to_save = np.clip(image * 255, 0, 255).astype(np.uint8)
+    cv2.imwrite(path, img_to_save)
+
 def mse(img1, img2):
     """
     MSE between two images.
