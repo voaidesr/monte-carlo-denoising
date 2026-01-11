@@ -4,7 +4,6 @@ from numba import njit, prange
 
 from mcnlm.utils import load_image, show_results, add_gaussian_noise
 
-
 # Params
 @dataclass
 class NLMParams:
