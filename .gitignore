@@ -1,5 +1,9 @@
-# docs 
-./docs/build/
+# docs
+./docs/build/*
+*aux
+*log
+*out
+
 .venv
 **/__pycache__/
 *.pyc
