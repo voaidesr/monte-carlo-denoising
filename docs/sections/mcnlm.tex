@@ -82,6 +82,59 @@ However,
 \end{algorithm}
 
 
+\subsection{Spatial Sampling}
+
+We must also consider that locality matters in images. In a picture of a starry night, for example, a bright star might look like noise if compared to the rest of the dark sky. We can integrate this insight with the ingenious structural handling of MCNLM by incorporating a spatial distance parameter into the weighting function:
+\begin{equation}
+    w_j = w_j^s \cdot w_j^r
+\end{equation}
+\noindent where $w_j^r$ is the weight mentioned at \ref{eq:wr} and $w_j^s$ is a spatial weight:
+\begin{equation}
+w_j^s = e^{-(d_2^j)^2/(2h_s^2)} \cdot \mathbb{I}\{d^j_{\infty} \leq \rho\}
+\end{equation}
+
+\noindent where $d_j^2$ is the Euclidean distance between the noisy patch and the reference patch we compare to and $d_j^{\infty}$ is the Chebyshev distance. The  indicator function $\mathbb{I}$ is used to determine a spatial search window of width $\rho$.
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{res/mc_matches_1.pdf}
+        \caption{Weight values in search window}
+        \label{fig:img1}
+    \end{subfigure}
+    \hfill % Adds flexible space between images
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{res/mc_matches_2.pdf}
+        \caption{Weigths for sampled center pixels}
+        \label{fig:img2}
+    \end{subfigure}
+
+    \caption{Main caption describing both images}
+    \label{fig:both_images}
+\end{figure}
+
+Figure \ref{fig:both_images} visualizes the weight function within a search window centered on a noisy pixel, where brighter values indicate higher weight magnitudes. This illustrates how the method preserves structure: pixels with similar patches exert a stronger influence on the weighted average, ensuring that structural details are retained in the denoised output.
+
 \subsection{Results}
 
+\FloatBarrier
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=1\linewidth]{res/mcnlm2.pdf}
+    \caption{MCNLM with $\xi \in \{0.3,  0.5, 0.8\}$}
+    \label{fig1}
+\end{figure}
 % aici vreau sa avem results cu diferite valori xi, comparate
+
+In the figures \ref{fig1}, \ref{fig2} we can see how the MCNLM algorithm behaves on an 1024x1024 image ($\approx 10^6$ pixels), with Gaussian noise with $\sigma = 17 / 255$ (taken into account that we normalize our pixels to have values in the interval $[0,1]$)/ and zero mean. The comparison is done on 5x5 patches, and on a 20x20 search window arround the noisy pixel. The sampling pattern is chosen as uniform, with $\mathbf{p} = \{\xi, \cdots, \xi\}$. It is obvious that an increase in the sampling ratio only provides a marginally better result.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.9\linewidth]{res/mcnlm3.pdf}
+    \caption{MCNLM with $\xi \in \{0.3,  0.5, 0.8\}$}
+    \label{fig2}
+\end{figure}
+
+\FloatBarrier

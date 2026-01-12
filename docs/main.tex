@@ -3,11 +3,28 @@
 \usepackage[bookmarksnumbered, colorlinks, plainpages]{hyperref}
 \usepackage{algorithm}
 \usepackage{algpseudocode}
-\usepackage{placeins}
+\usepackage[section]{placeins}
 \usepackage{float} % enables [H]
+\usepackage{subcaption}
+\usepackage{graphicx}
+\usepackage{fancyhdr}
 
 \textheight 22.5truecm \textwidth 14.5truecm
 \setlength{\oddsidemargin}{0.35in}\setlength{\evensidemargin}{0.35in}
+
+% Consistent bottom-centered page numbers for all page styles.
+\pagestyle{fancy}
+\fancyhf{}
+\fancyfoot[C]{\normalsize\thepage}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+\fancypagestyle{plain}{
+  \fancyhf{}
+  \fancyfoot[C]{\normalsize\thepage}
+  \renewcommand{\headrulewidth}{0pt}
+  \renewcommand{\footrulewidth}{0pt}
+}
+\setlength{\footskip}{14pt}
 
 % color for ref and citation
 \definecolor{mcnlmRef}{HTML}{34048c}

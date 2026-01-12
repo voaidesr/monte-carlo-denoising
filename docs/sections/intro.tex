@@ -55,6 +55,7 @@ A standard choice for the weight function is:
 w_i = e^{
     - || \mathbf{y} - \mathbf{x_i} ||^2 / (2h_r^2)
 }
+\label{eq:wr}
 \end{equation}
 
 Where $h_r$ is a scalar parameter that controls the decay of the distribution: small values create a fast decay and ensure a focus on stricter similarity between patches, whereas larger values allow different patches to have a greater weight. And $|| \mathbf{\cdot} ||$ is the Euclidian norm.
