@@ -27,7 +27,6 @@ def results_mcnlm():
         output_path="../docs/res/mcnlm2.pdf",
     )
 
-
 def main():
     # results_mcnlm()
-    show_matches('imgs/clock.tiff', [(50, 50)])
+    show_matches('imgs/clock.tiff', [(150, 210), (90, 135), (170, 80)], "../docs/res/strong_matches_p1.pdf")
