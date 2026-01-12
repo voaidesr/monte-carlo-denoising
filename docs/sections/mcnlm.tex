@@ -6,4 +6,20 @@ In this section, we discuss the full implementation of the algorithm, the correc
 
 There are two ways to extract reference patches. The first one is based on picking them from the original noisy, image, which is called \textit{internal denoising}. The second method is based on having the patches taken from a large database of other images, which is called \textit{external denoising}. The paper focuses on internal denoising.
 
-The Monte Carlo sampling is done on the set $\mathcal{X} = \{x_1, \dots, x_n \}$, considering each reference patch independent. The process is determined by a sequence of random variables $\{I_j\}_{j=1}^n$, where $I_j \sim \operatorname{Bernoulli}(p_j)$. The weight will be sampled only if $I_j = 1$.
+The Monte Carlo sampling is done on the set $\mathcal{X} = \{x_1, \dots, x_n \}$, considering each reference patch independent. The process is determined by a sequence of random variables $\{I_j\}_{j=1}^n$, where $I_j \sim \operatorname{Bernoulli}(p_j)$. The weight will be sampled only if $I_j = 1$. The vector of these probabilities, $\mathbf{p} := [p_1, \dots, p_n]^T$, is called the \textit{sampling pattern} of the algorithm \cite{mcnlm}.
+
+The main parameter of this algorithm is $\xi$, which is the expected value of the random variable which models the ratio between the number of the samples taken and the number of references:
+\begin{equation}
+    S_n = \frac{1}{n} \sum_{j = 1}^n I_j
+\end{equation}
+\noindent which has:
+\begin{equation}
+    \xi \overset{\text{def}}{=} \mathbb{E}[S_n] = \frac{1}{n} \sum_{j = 1}^{n} \mathbb{E}[I_j] = \frac{1}{n}\sum_{j = 1}^{n} p_j
+\end{equation}
+
+So, an important requirement is that:
+\begin{equation}
+    \sum_{j=1}^{n} = n \xi
+\end{equation}
+
+$S_n$ is called the \textit{empirical sampling ratio} and $\xi$ the average sampling ratio \cite{mcnlm}.
