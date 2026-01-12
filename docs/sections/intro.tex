@@ -8,16 +8,36 @@ y = x + \eta
 Where $y$ is the noisy pixel, $x$ the pure pixel and $\eta \sim \mathcal{N}(0, \sigma)$ is the noise.
 
 \subsection{Denoising Techniques}
-Traditional denoising techniques, such as Gaussian smoothing, Median filtering or Local means, operate on the principle of locality, assuming that the true value of the pixel must be similar to the values of its neighbours. This is effective at removing noise, but it also leads to loss of fine textures and blurring of edges.
+Traditional denoising techniques, such as Gaussian smoothing, Median filtering or Local means, operate on the principle of locality, assuming that the true value of the pixel must be similar to the values of its neighbours. This is effective at removing noise, but it also leads to loss of fine textures and blurring of edges. Newer techniques include Convolutional Neural Networks, Wavelet Transforms~\cite{tian2023multi}, and Modified Decision-Based Median Filter~\cite{ullah2025new}. Although these methods can achieve impressive results, they often require extensive training data, computational resources, or complex parameter tuning. Non-Local Means (NLM)~\cite{buades1} is remarkable in its simplicty and effectiveness, however its high computational complexity limits real-time application.
 
 \subsection{Non-Local Means}
-The Non-Local Means estimates the true value of the pixel by computing a wieghted average of different patches, using a weight function that prioritizes pixels with similar structural patterns.
+The Non-Local Means estimates the true value of the pixel by computing a wieghted average of different patches, using a weight function that prioritizes pixels with similar structural patterns. The most similar pixels to a given noisy pixel have no reason to be in its immediate vicinity. For example, patterns such as smooth surfaces, periodic textures or repeated structures can appear in different areas of the image. Although the search space is larger, we are still going to use only a neighbourhood of the pixel to limit the computational cost. As aknowledged by the authors themselves~\cite{ipol.2011.bcm_nlm}, the term ``non-local'' is somewhat misleading, and a more accurate name would be \emph{``semi-local''}.
 
-Given a noisy pixel, the surrounding patch $\mathbf{y}$ will be used to check for similarity with other patches. This object can be flattened into a d-pixel: $\mathbf{y} \in \mathbb{R}^d$.
+\begin{definition}
+    Suppose $\Omega$ is an image domain, and let $p$, $q \in \Omega$ be two points within the image. Then, the algorithm for denoising is defined as:
+    \begin{equation}
+        z(p) = \frac{1}{C(p)} \int_{\Omega} w(p, q) y(q) \, dq
+    \end{equation}
+    where $z(p)$ is the denoised pixel at point $p$, $y(q)$ is the noisy pixel at point $q$, $w(p, q)$ is the weight function that measures the similarity between patches centered at $p$ and $q$, and $C(p)$ is a normalizing factor given by:
+    \begin{equation}
+        C(p) = \int_{\Omega} w(p, q) \, dq
+    \end{equation}
+\end{definition}
 
-The algorithm requires a set of patches $\mathcal{X} = \{ \mathbf{x}_1, \dots, \mathbf{x}_n \}$ that are obtained from reference images.
+Obviously, in a real-world application we would use a discrete version of this algorithm:
+\begin{equation}
+    z(p) = \frac{1}{C(p)} \sum_{q \in \Omega} w(p, q) y(q)
+\end{equation}
 
-NLM replaces the noisy pixel with the weighted average of pixels in the reference set:
+where, again, the normalizing factor is given by:
+
+\begin{equation}
+    C(p) = \sum_{q \in \Omega} w(p, q)
+\end{equation}
+
+
+Given a noisy pixel, the surrounding patch $\mathbf{y}$ will be used to check for similarity with other patches. This object can be flattened into a d-pixel: $\mathbf{y} \in \mathbb{R}^d$. The algorithm requires a set of patches $\mathcal{X} = \{ \mathbf{x}_1, \dots, \mathbf{x}_n \}$ that are obtained from reference images. Given this, the discrete version of NLM can be expressed as:
+
 \begin{equation}
 z = \frac{
     \sum_{i = 1}^n w_i x_i
