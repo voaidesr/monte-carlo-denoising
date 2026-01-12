@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import cv2
 
 import mcnlm.mc_nlm as mc_nlm
-
+import mcnlm.naive_nlm as naive_nlm
 # ---------- General utilites ------------
 
 def load_image(path, fallback_size=(100, 100)):
@@ -107,7 +107,60 @@ def show_results(original, noisy, denoised):
 
 
 # ------------ Naive NLM Utilities ------------
+def show_nlm_result_zoomed(image_path, zoom, output_path):
+    image = load_image(image_path)
 
+    sigma = 17.0
+    noisy = add_gaussian_noise(image*255, sigma) / 255.0
+
+    x0, y0, w, h = zoom
+    x1, y1 = x0 + w, y0 + h
+
+    fig, axs = plt.subplots(2, 2, figsize=(8, 6))
+
+    # Noisy
+    axs[0, 0].imshow(noisy, cmap="gray")
+    axs[0, 0].set_title(f"Noisy MSE = {mse(image, noisy):.4f}")
+    axs[0, 0].axis("off")
+
+    axs[1, 0].imshow(noisy[y0:y1, x0:x1], cmap="gray")
+    axs[1, 0].set_title("Zoom")
+    axs[1, 0].axis("off")
+    
+    params = naive_nlm.NLMParams(
+            sigma=sigma/255.0,
+            patch_radius=2,
+            search_radius=10,
+            h_factor=0.4,
+        )
+    
+    # Denoised
+    denoised = naive_nlm.test_naive_nlm(noisy, params)
+    axs[0, 1].imshow(denoised, cmap="gray")
+    axs[0, 1].set_title(f"NLM Denoised MSE = {mse(image, denoised):.4f}")
+    axs[0, 1].axis("off")
+    
+    axs[1, 1].imshow(denoised[y0:y1, x0:x1], cmap="gray")
+    axs[1, 1].set_title("Zoom")
+    axs[1, 1].axis("off")
+    
+    # Add rects
+    rect = plt.Rectangle((x0, y0), w, h,
+                            edgecolor="red",
+                            facecolor="none",
+                            linewidth=1,
+                            alpha = 0.5)
+    axs[0, 0].add_patch(rect)
+    rect = plt.Rectangle((x0, y0), w, h,
+                            edgecolor="red",
+                            facecolor="none",
+                            linewidth=1,
+                            alpha = 0.5)
+    axs[0, 1].add_patch(rect)
+        
+    plt.tight_layout()
+    plt.savefig(output_path)
+    plt.show()
 
 
 # ------------ MCNLM utilites ---------------
