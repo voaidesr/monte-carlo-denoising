@@ -42,10 +42,10 @@ def results_naive_nlm():
         zoom=(120, 100, 64, 64),
         output_path="../docs/res/nlm_denoise2.pdf",
     )
-    
-def mc_convergence_results():
-    mc_convergence('imgs/clock.tiff')
 
+def mc_convergence_results():
+    mc_convergence(image_path='imgs/moon.tiff', output_path1='../docs/res/convergence1_mse.pdf', output_path2='../docs/res/convergence1_psnr.pdf')
+    mc_convergence(image_path='imgs/clock.tiff', output_path1='../docs/res/convergence2_mse.pdf', output_path2='../docs/res/convergence2_psnr.pdf')
 
 def main():
     # results_naive_nlm()
