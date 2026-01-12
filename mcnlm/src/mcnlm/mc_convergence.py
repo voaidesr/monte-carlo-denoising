@@ -54,7 +54,7 @@ def run_mc_convergence(image_path, xis):
     return xis, mc_clean_mse, mc_clean_psnr, naive_clean_mse, native_clean_psnr
 
 
-def mc_convergence(image_path):
+def mc_convergence(image_path, output_path1, output_path2):
     probs = np.linspace(0, 1, 13)
     # probs = [1]
     print('Testing convergence for probs: ', probs)
@@ -72,6 +72,8 @@ def mc_convergence(image_path):
     plt.xticks(xis)
     plt.grid(True)
     plt.legend()
+    plt.tight_layout()
+    plt.savefig(output_path1, bbox_inches='tight', dpi=300)
     plt.show()
 
     # MC-NLM PSNR
@@ -84,4 +86,6 @@ def mc_convergence(image_path):
     plt.xticks(xis)
     plt.grid(True)
     plt.legend()
+    plt.tight_layout()
+    plt.savefig(output_path2, bbox_inches='tight', dpi=300)
     plt.show()
