@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import cv2
 
 import mcnlm.mc_nlm as mc_nlm
-
+import mcnlm.naive_nlm as naive_nlm
 # ---------- General utilites ------------
 
 def load_image(path, fallback_size=(100, 100)):
@@ -107,7 +107,60 @@ def show_results(original, noisy, denoised):
 
 
 # ------------ Naive NLM Utilities ------------
+def show_nlm_result_zoomed(image_path, zoom, output_path):
+    image = load_image(image_path)
 
+    sigma = 17.0
+    noisy = add_gaussian_noise(image*255, sigma) / 255.0
+
+    x0, y0, w, h = zoom
+    x1, y1 = x0 + w, y0 + h
+
+    fig, axs = plt.subplots(2, 2, figsize=(8, 6))
+
+    # Noisy
+    axs[0, 0].imshow(noisy, cmap="gray")
+    axs[0, 0].set_title(f"Noisy MSE = {mse(image, noisy):.4f}")
+    axs[0, 0].axis("off")
+
+    axs[1, 0].imshow(noisy[y0:y1, x0:x1], cmap="gray")
+    axs[1, 0].set_title("Zoom")
+    axs[1, 0].axis("off")
+    
+    params = naive_nlm.NLMParams(
+            sigma=sigma/255.0,
+            patch_radius=2,
+            search_radius=10,
+            h_factor=0.4,
+        )
+    
+    # Denoised
+    denoised = naive_nlm.test_naive_nlm(noisy, params)
+    axs[0, 1].imshow(denoised, cmap="gray")
+    axs[0, 1].set_title(f"NLM Denoised MSE = {mse(image, denoised):.4f}")
+    axs[0, 1].axis("off")
+    
+    axs[1, 1].imshow(denoised[y0:y1, x0:x1], cmap="gray")
+    axs[1, 1].set_title("Zoom")
+    axs[1, 1].axis("off")
+    
+    # Add rects
+    rect = plt.Rectangle((x0, y0), w, h,
+                            edgecolor="red",
+                            facecolor="none",
+                            linewidth=1,
+                            alpha = 0.5)
+    axs[0, 0].add_patch(rect)
+    rect = plt.Rectangle((x0, y0), w, h,
+                            edgecolor="red",
+                            facecolor="none",
+                            linewidth=1,
+                            alpha = 0.5)
+    axs[0, 1].add_patch(rect)
+        
+    plt.tight_layout()
+    plt.savefig(output_path)
+    plt.show()
 
 
 # ------------ MCNLM utilites ---------------
@@ -186,95 +239,85 @@ def show_mcnlm_result_zoomed(image_path, probs, zoom, output_path):
     plt.tight_layout()
     plt.savefig(output_path)
     plt.show()
-    
-    
-def show_matches(image_path, points, K=3000):
-    """
-    Visualize strongest Monte-Carlo NLM matches using the numba MC-NLM kernel logic.
-    """
-    # --- load + noise ---
-    image = load_image(image_path)
-    sigma_val = 17.0
-    noisy = add_gaussian_noise(image*255, sigma_val) / 255.0
 
-    # --- MCNLM params ---
+
+def show_matches(image_path, points, output_path, K=3000):
+    """
+    Visualize MC-NLM matches using Monte-Carlo sampling.
+    Only a subset of offsets is used according to sampling_prob.
+    """
+    # --- load + noisy ---
+    image = load_image(image_path)
+    SIGMA = 17
+    noisy = add_gaussian_noise(image*255, sigma=SIGMA).astype(np.float32)/255.0
+
     params = mc_nlm.MCNLMParams(
-        sigma = sigma_val / 255.0,
-        h_factor = 0.4,
-        patch_size = 5,
-        search_radius = 20,
-        sampling_prob = 0.3
+        sigma=SIGMA/255.0,
+        h_factor=0.4,
+        patch_size=5,
+        search_radius=20,
+        spatial_sigma=10,
+        sampling_prob=1.0 # Monte-Carlo sampling
     )
 
     pad = params.patch_radius
     rho = params.search_radius
-    h = params.h_factor * params.sigma
-    h2 = h*h
-    sigma2 = params.sigma*params.sigma
-
     total_pad = pad + rho
-    padded = np.pad(noisy, total_pad, mode="reflect")
+    padded = np.pad(noisy, total_pad, mode='reflect')
 
-    patch_size = params.patch_size
-    patch_len = patch_size * patch_size
-    center_idx = patch_len // 2
-
-    # --- offsets for the search window ---
-    offsets = []
-    for di in range(-rho, rho+1):
-        for dj in range(-rho, rho+1):
-            offsets.append((di,dj))
-    offsets = np.array(offsets)
+    # --- offsets for search window ---
+    y, x = np.mgrid[-rho:rho+1, -rho:rho+1]
+    coords = np.stack([y.flatten(), x.flatten()], axis=1)
 
     plt.figure(figsize=(8,8))
-    plt.imshow(noisy, cmap="gray")
-    
+    plt.imshow(noisy, cmap='gray')
+
     for pi, pj in points:
         pi0, pj0 = pi + total_pad, pj + total_pad
-
-        # center patch
         y_patch = padded[pi0-pad:pi0+pad+1, pj0-pad:pj0+pad+1].flatten()
 
-        weights = []
-        coords = []
-
-        # Monte-Carlo search
-        for di, dj in offsets:
-            if np.random.rand() >= params.sampling_prob:
-                continue
-
-            qi, qj = pi0 + di, pj0 + dj
-            comp_patch = padded[qi-pad:qi+pad+1, qj-pad:qj+pad+1].flatten()
-
-            # --- exact MCNLM weight ---
-            diff = comp_patch - y_patch
-            d2 = np.mean(diff*diff)
-            d2 = max(d2 - 2*sigma2, 0.0)  # exact as numba kernel
-            w = np.exp(-d2 / h2)
-
-            weights.append(w)
-            coords.append((di,dj))
-
-        if len(weights) == 0:
+        # --- Monte-Carlo sampling mask ---
+        mask = np.random.rand(len(coords)) < params.sampling_prob
+        sampled_coords = coords[mask]
+        if len(sampled_coords) == 0:
             continue
 
-        weights = np.array(weights)
-        coords = np.array(coords)
+        # --- compute weights only for sampled offsets ---
+        w_r = []
+        for di, dj in sampled_coords:
+            qi, qj = pi0+di, pj0+dj
+            comp_patch = padded[qi-pad:qi+pad+1, qj-pad:qj+pad+1].flatten()
+            diff = comp_patch - y_patch
+            d2 = np.mean(diff*diff)
+            d2 = max(d2 - 2*params.sigma**2, 0.0)
+            w_r.append(np.exp(-d2 / (params.h_factor*params.sigma*params.patch_size)**2))
+        w_r = np.array(w_r)
 
-        # strongest matches
-        idx = np.argsort(weights)[-min(K, len(weights)):]
-        xs = pj + coords[idx,1]
-        ys = pi + coords[idx,0]
-        cs = weights[idx]
+        # --- spatial term ---
+        spatial_d2 = np.sum(sampled_coords**2, axis=1)
+        w_s = np.exp(-spatial_d2 / (2*params.spatial_sigma**2))
 
-        # normalize for colormap
+        w = w_r * w_s
+
+        # --- strongest matches ---
+        idx = np.argsort(w)[-min(K,len(w)):]
+        xs = pj + sampled_coords[idx,1]
+        ys = pi + sampled_coords[idx,0]
+        cs = w[idx]
+
+        # --- scale for visualization ---
+        cs = np.clip(cs, 1e-3, None)
+        cs = cs**0.5
         cs = cs / cs.max()
 
-        plt.scatter(xs, ys, c=cs, cmap="hot", s=12)
+        plt.scatter(xs, ys, c=cs, cmap='hot', s=10, edgecolors='none')
+        plt.scatter([pj], [pi], c='lime', s=20)
 
-        # original point
-        plt.scatter([pj], [pi], c="lime", s=30)
-
-    plt.title("MC-NLM strong matches (numba kernel)")
-    plt.axis("off")
+    plt.title(f"Strong matches (Monte-Carlo sampling prob = {params.sampling_prob})")
+    plt.axis('off')
+    plt.tight_layout()
     plt.show()
+    plt.savefig(output_path)
+
+
+
