@@ -1,9 +1,23 @@
 \documentclass[12pt, reqno]{amsart}
 \usepackage{amsmath, amsthm, amscd, amsfonts, amssymb, graphicx, xcolor}
 \usepackage[bookmarksnumbered, colorlinks, plainpages]{hyperref}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{placeins}
+\usepackage{float} % enables [H]
 
 \textheight 22.5truecm \textwidth 14.5truecm
 \setlength{\oddsidemargin}{0.35in}\setlength{\evensidemargin}{0.35in}
+
+% color for ref and citation
+\definecolor{mcnlmRef}{HTML}{34048c}
+\definecolor{mcnlmCite}{HTML}{060482}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=mcnlmRef, % \ref, \pageref
+  citecolor=mcnlmCite, % \cite
+  urlcolor=mcnlmRef
+}
 
 \setlength{\topmargin}{-.5cm}
 

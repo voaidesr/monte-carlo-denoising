@@ -23,3 +23,65 @@ So, an important requirement is that:
 \end{equation}
 
 $S_n$ is called the \textit{empirical sampling ratio} and $\xi$ the average sampling ratio \cite{mcnlm}.
+
+\subsection{Algorithm}
+\label{sec:algo}
+Given a set of references $\mathcal{X}$ and the sampling ration $\xi$, we can define the sampling pattern $\mathbf{p}$ in order for it to respect the condition:
+\begin{equation}
+    \sum_{j = 1}^{n} p_j  = n \xi
+\end{equation}.
+
+We can approximate the numerator and the denominator in \ref{eq:nlm} using two random variables:
+\begin{equation}
+    A = \frac{1}{n} \sum_{j = 1}^{n} x_j w_j \frac{I_j}{p_j} \quad \text{  and  } \quad
+    B = \frac{1}{n} \sum_{j = 1}^{n} w_j \frac{I_j}{p_j}
+\end{equation}
+
+To show why we scale by $\frac{1}{p_j}$, we calculate the expected value of the estimators. By linearity of expectation:
+\begin{equation}
+    \mathbb{E}[A] = \frac{1}{n} \sum_{j=1}^{n} x_j w_j \frac{\mathbb{E}[I_j]}{p_j}
+    = \frac{1}{n} \sum_{j=1}^{n} x_j w_j \frac{p_j}{p_j} =  \frac{1}{n} \sum_{j=1}^{n} x_j w_j
+\end{equation}
+\noindent and
+\begin{equation}
+    \mathbb{E}[B] = \frac{1}{n} \sum_{j = 1}^{n} w_j \frac{\mathbb{E}[I_j]}{p_j} = \frac{1}{n} \sum_{j = 1}^n w_j
+\end{equation}
+
+So, A and B are \textit{unbiased estimators} of the true numerator and denominator.
+
+In the end, we will aproximate the result $z$ by another random variable:
+\begin{equation}
+    Z = \frac{A}{B} = \frac{\sum_{j=1}^{n} x_j w_j \frac{I_j}{p_j}}{\sum_{j = 1}^{n} w_j\frac{I_j}{p_j}}
+\end{equation}
+
+However,
+\begin{equation}
+    \mathbb{E}[Z] = \mathbb{E}\left[\frac{A}{B}\right] \neq \frac{\mathbb{E}[A]}{\mathbb{E}[B]} = z
+\end{equation}
+
+% todo - implement section label sec:ineq when I atually implement the inequality
+\noindent so, $Z$ is a \textit{biased estimator} of $z$. However, section \ref{sec:ineq} proves that as $n \to \infty$, the deviation $|Z - z|$ drops exponentially. This shows that, for a larger number of patches, the more efficient MCNLM gives results comparable to that of the simple NLM.
+
+\FloatBarrier
+\begin{algorithm}[H]
+\caption{Monte Carlo NLM Denoising}
+\label{alg:mcnlm}
+\begin{algorithmic}[1]
+\Require Noisy patch $\mathbf{y}$, reference set $\mathcal{X}$, sampling pattern $\mathbf{p}$
+\Ensure Denoised pixel $z$
+\For{$j$ in $1 \dots n$}
+    \State Generate random variable $I_j \sim \operatorname{Bernoulli}(p_j)$
+    \If{$I_j = 1$}
+        \State Compute $w_j$
+    \EndIf
+\EndFor
+\State Compute $A = \frac{1}{n} \sum_{j = 1}^{n} w_j x_j \frac{I_j}{p_j}$
+\State Compute $B = \frac{1}{n} \sum_{j = 1}^{n} w_j  \frac{I_j}{p_j}$
+\State \Return $Z = \frac{A}{B}$
+\end{algorithmic}
+\end{algorithm}
+
+
+\subsection{Results}
+
+% aici vreau sa avem results cu diferite valori xi, comparate

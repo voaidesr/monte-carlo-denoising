@@ -18,7 +18,7 @@ The Non-Local Means estimates the true value of the pixel by computing a wieghte
     \begin{equation}
         z(p) = \frac{1}{C(p)} \int_{\Omega} w(p, q) y(q) \, dq
     \end{equation}
-    where $z(p)$ is the denoised pixel at point $p$, $y(q)$ is the noisy pixel at point $q$, $w(p, q)$ is the weight function that measures the similarity between patches centered at $p$ and $q$, and $C(p)$ is a normalizing factor given by:
+    where $z(p)$ is the denoised value at point $p$, $y(q)$ is the noisy value at point $q$, $w(p, q)$ is the weight function that measures the similarity between patches centered at $p$ and $q$, and $C(p)$ is a normalizing factor given by:
     \begin{equation}
         C(p) = \int_{\Omega} w(p, q) \, dq
     \end{equation}
@@ -49,7 +49,6 @@ z = \frac{
 
 \noindent where $x_i$ represents the center pixel in the patch $\mathbf{x_i}$, and the weight $w_i$ measures the similarity between the match $\mathbf{y}$ and $\mathbf{x_i}$.
 
-\newpage
 
 A standard choice for the weight function is:
 \begin{equation}
