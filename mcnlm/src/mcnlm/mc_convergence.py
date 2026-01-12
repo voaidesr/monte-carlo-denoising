@@ -51,26 +51,6 @@ def run_mc_convergence(image_path, xis):
         mc_clean_psnr.append(psnr(mc, image))
         print(f"  MSE vs clean: {mc_clean_mse[-1]}, PSNR vs clean: {mc_clean_psnr[-1]}")
 
-        plt.figure(figsize=(12,6))
-        plt.subplot(1,4,1)
-        plt.title('Original Image')
-        plt.imshow(image, cmap='gray')
-        plt.axis('off')
-        plt.subplot(1,4,2)
-        plt.title('Noisy Image')
-        plt.imshow(noisy, cmap='gray')
-        plt.axis('off')
-        plt.subplot(1,4,3)
-        plt.title(f'MC-NLM Denoised (p={xi:.2f})')
-        plt.imshow(mc, cmap='gray')
-        plt.axis('off')
-        plt.subplot(1,4,4)
-        plt.title('Naive NLM Denoised')
-        plt.imshow(nlm_ref, cmap='gray')
-        plt.axis('off')
-        plt.suptitle(f'MC-NLM vs Naive NLM (p={xi:.2f})')
-        plt.show()
-
     return xis, mc_clean_mse, mc_clean_psnr, naive_clean_mse, native_clean_psnr
 
 
