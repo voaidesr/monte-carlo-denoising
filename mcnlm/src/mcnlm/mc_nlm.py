@@ -19,7 +19,6 @@ class MCNLMParams:
     def patch_radius(self):
         return self.patch_size // 2
 
-
 @njit
 def mcnlm_local_numba(noisy, pi, pj, patch_radius, search_radius, sigma, h, sampling_prob):
     """Numba-compatible MCNLM kernel"""

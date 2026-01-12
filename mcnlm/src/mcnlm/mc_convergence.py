@@ -55,7 +55,6 @@ def run_mc_convergence(image_path, xis):
 
 
 def mc_convergence(image_path):
-
     probs = np.linspace(0, 1, 13)
     # probs = [1]
     print('Testing convergence for probs: ', probs)
