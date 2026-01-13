@@ -1,0 +1,273 @@
+\documentclass{beamer}
+
+% Theme selection - keeping it clean and professional
+\usetheme{Madrid}
+\usecolortheme{default}
+
+% Packages
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{booktabs}
+
+% Title Information
+\title[Monte Carlo NLM]{Monte Carlo Optimization of \\ Non-Local Means Denoising Algorithm}
+\author[Robu-Verzotti-Voaideș]{Petru-Răzvan Robu, Matteo-Alexandru Verzotti, \\ Robert-Ionuț Voaideș-Negustor}
+\date{\today}
+
+\begin{document}
+
+%--- Slide 1: Title ---
+\begin{frame}
+    \titlepage
+\end{frame}
+
+%--- Slide 2: Introduction ---
+\begin{frame}{Introduction: The Noise Problem}
+    \begin{itemize}
+        \item \textbf{Image Noise:} Modeled as additive white Gaussian noise.
+        \[ y = x + \eta, \quad \eta \sim \mathcal{N}(0, \sigma) \]
+        \item \textbf{Traditional Techniques:}
+            \begin{itemize}
+                \item Gaussian smoothing, Median filtering.
+                \item \textit{Issue:} Relies on locality, causing blurred edges and lost textures.
+            \end{itemize}
+        \item \textbf{Non-Local Means (NLM):}
+            \begin{itemize}
+                \item Preserves texture by using similar patches from \textit{anywhere} in the image.
+                \item \textit{Issue:} High computational complexity.
+            \end{itemize}
+    \end{itemize}
+\end{frame}
+
+%--- Slide 3: The NLM Algorithm ---
+\begin{frame}{Non-Local Means (NLM) Formulation}
+    The denoised value $z(p)$ is a weighted average of pixels $y(q)$:
+    
+    \[ z(p) = \frac{1}{C(p)} \sum_{q \in \Omega} w(p,q) y(q) \]
+    
+    \begin{itemize}
+        \item \textbf{Weights ($w$):} Measure similarity between patches centered at $p$ and $q$.
+        \[ w_i = e^{-||y - x_i||^2 / (2h_r^2)} \]
+        \item \textbf{Complexity:} $\mathcal{O}(m n d)$
+            \begin{itemize}
+                \item $m$: Pixels to denoise
+                \item $n$: Number of patches (search space)
+                \item $d$: Patch dimensions
+            \end{itemize}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{NLM Denoising Results}
+    \centering
+    % Replace 'filename' with your actual image file name (e.g., comparison.png)
+    \includegraphics[width=0.75\textwidth]{./res/nlm_denoise2.pdf}
+    
+    \vspace{0.5cm} % Adds a little space between image and text
+\end{frame}
+
+%--- Slide 4: Monte Carlo Optimization ---
+\begin{frame}{Monte Carlo Non-Local Means (MCNLM)}
+    \begin{block}{The Goal}
+    Reduce complexity from $\mathcal{O}(mnd)$ to $\mathcal{O}(mkd)$ where $k \ll n$.
+    \end{block}
+
+    \textbf{Core Strategy:}
+    \begin{itemize}
+        \item Instead of computing weights for \textit{all} $n$ patches, select a random subset $k$.
+        \item Use Bernoulli sampling to generate a reference set.
+        \item \textbf{Sampling Pattern $p$:} Probability vector determining if a patch is selected.
+    \end{itemize}
+\end{frame}
+
+%--- Slide 5: Stochastic Approximation ---
+\begin{frame}{Mathematical Approximation}
+    We approximate the NLM fraction using random variables $A$ (numerator) and $B$ (denominator):
+
+    \[
+        A = \frac{1}{n}\sum_{j=1}^{n} w_j x_j \frac{I_j}{p_j}, \quad 
+        B = \frac{1}{n}\sum_{j=1}^{n} w_j \frac{I_j}{p_j}
+    \]
+
+    \begin{itemize}
+        \item $I_j \sim \text{Bernoulli}(p_j)$: Indicator variable for sampling.
+        \item $Z = A/B$ is the estimator for the true pixel value $z$.
+        \item \textbf{Note:} $Z$ is a \textit{biased} estimator, but the error drops exponentially as sample size increases.
+    \end{itemize}
+\end{frame}
+
+%--- Slide 6: Spatial Sampling ---
+\begin{frame}{Improving Spatial Locality}
+    Pure NLM ignores spatial distance. We reintroduce locality for better results.
+    
+    \textbf{Combined Weight Function:}
+    \[ w_j = w_j^r \cdot w_j^s \]
+    
+    \begin{itemize}
+        \item $w_j^r$: Structural similarity (standard NLM).
+        \item $w_j^s$: Spatial proximity.
+        \[ w_j^s = e^{-(d_2^j)^2 / (2h_k^2)} \cdot \mathbb{I}\{d_{\infty}^j \le \rho\} \]
+        \item Helps distinguish features (e.g., a bright star vs. noise) based on surroundings.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Non-local matches}
+    \begin{columns}[c] % [c] vertically centers the images
+        
+        % First Column
+        \column{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{./res/mc_matches_1.pdf}
+        
+        % Second Column
+        \column{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{./res/mc_matches_2.pdf}
+        
+    \end{columns}
+    
+    \vspace{0.5cm}
+    \centering
+\end{frame}
+
+%--- Slide 7: Algorithm Logic ---
+\begin{frame}{Algorithm: Monte Carlo NLM}
+    \begin{enumerate}
+        \item \textbf{Input:} Noisy patch $y$, reference set $X$.
+        \item \textbf{Loop} through references $j=1 \dots n$:
+            \begin{itemize}
+                \item Generate random variable $I_j \sim \text{Bernoulli}(p_j)$.
+                \item \textbf{If} $I_j = 1$ (Sampled):
+                \item Compute weight $w_j$.
+                \item Update sums for Numerator ($A$) and Denominator ($B$).
+            \end{itemize}
+        \item \textbf{Output:} $Z = A/B$.
+    \end{enumerate}
+\end{frame}
+
+\begin{frame}{MCNLM Results}
+    \centering
+    % Replace 'filename' with your actual image file name (e.g., comparison.png)
+    \includegraphics[width=1.01\textwidth]{./res/mcnlm3.pdf}
+    
+    \vspace{0.5cm} % Adds a little space between image and text
+\end{frame}
+
+\begin{frame}{MCNLM Results}
+    \centering
+    % Replace 'filename' with your actual image file name (e.g., comparison.png)
+    \includegraphics[width=1.01\textwidth]{./res/mcnlm1.pdf}
+    
+    \vspace{0.5cm} % Adds a little space between image and text
+\end{frame}
+
+
+
+%--- Slide 8: Theoretical Bounds ---
+\begin{frame}{Why it Works: Error Bounds}
+    Does the approximation converge?
+    
+    \begin{block}{Exponential Error Decay}
+    For sample size $n$ and error tolerance $\epsilon$:
+    \[ \mathbb{P}(|Z - z| > \epsilon) \le \text{Exponential Decay Terms} \]
+    \end{block}
+
+    \begin{itemize}
+        \item \textbf{Empirical Proof:} Even with only \textbf{5\%} of samples ($p=0.05$):
+        \[ \mathbb{P}(\text{Error} > 0.01) \le 6.5 \times 10^{-6} \]
+        \item High reliability with fraction of the cost.
+    \end{itemize}
+\end{frame}
+
+%--- Slide 9: Experimental Results ---
+\begin{frame}{Experimental Results}
+    \begin{columns}
+        \column{0.5\textwidth}
+        \textbf{MSE Convergence:}
+        \begin{itemize}
+            \item MSE drops rapidly as sampling ratio increases.
+            \item Diminishing returns after $p=0.3$.
+        \end{itemize}
+        
+        \column{0.5\textwidth}
+        \textbf{Visual Quality:}
+        \begin{itemize}
+            \item Preserves edges better than Gaussian.
+            \item Comparable visual quality to full NLM.
+        \end{itemize}
+    \end{columns}
+
+    \vspace{1cm}
+    \textit{(Placeholder for Figure 4/6: MSE Comparison Charts)}
+\end{frame}
+
+\begin{frame}{Comparison Results}
+    \begin{columns}[c] % [c] vertically centers the images
+        
+        % First Column
+        \column{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{./res/convergence1_mse.pdf}
+        
+        % Second Column
+        \column{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{./res/convergence1_psnr.pdf}
+        
+    \end{columns}
+    
+    \vspace{0.5cm}
+    \centering
+    \textit{Figure: Visual comparison showing MSE and PSNR convergence.}
+\end{frame}
+
+\begin{frame}{Increasing window size}
+    \centering
+    % Replace 'filename' with your actual image file name (e.g., comparison.png)
+    \includegraphics[width=0.75\textwidth]{./res/window_size_mse.pdf}
+    
+    \vspace{0.5cm} % Adds a little space between image and text
+    
+    \textit{Figure: Plotting MSE as window size is increased}
+\end{frame}
+
+%--- Slide 10: Handling Unknown Noise ---
+\begin{frame}{Noise Estimation (FFT)}
+    In real applications, noise deviation ($\sigma$) is unknown.
+    
+    \textbf{Solution: Fast Fourier Transform (FFT)}
+    \begin{enumerate}
+        \item Convert image to Frequency Domain.
+        \item High-frequency components $\approx$ Noise.
+        \item Mask low frequencies and compute standard deviation of the remainder.
+    \end{enumerate}
+    
+    \begin{itemize}
+        \item \textbf{Result:} Estimated $\sigma \approx 20.33$ vs True $\sigma = 17$.
+        \item Sufficient for effective denoising.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Noise Comparison}
+    \centering
+    % Replace 'filename' with your actual image file name (e.g., comparison.png)
+    \includegraphics[width=1.01\textwidth]{./res/noise_comparison_visual.pdf}
+    
+    \vspace{0.5cm} % Adds a little space between image and text
+\end{frame}
+
+
+
+%--- Slide 11: Conclusion ---
+\begin{frame}{Conclusion}
+    \begin{itemize}
+        \item \textbf{Efficiency:} MCNLM significantly reduces computational cost ($\mathcal{O}(mkd)$).
+        \item \textbf{Quality:} Maintains high Peak Signal-to-Noise Ratio (PSNR).
+        \item \textbf{Robustness:} Theoretical bounds prove reliability even with low sampling rates (e.g., 5-10\%).
+        \item \textbf{Practicality:} Can be combined with spatial weights and FFT noise estimation for real-world usage.
+    \end{itemize}
+    
+    \vspace{0.5cm}
+    \centering \Large \textbf{Thank You!}
+\end{frame}
+
+\end{document}
