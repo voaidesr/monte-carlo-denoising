@@ -7,8 +7,6 @@ This repository implements an optimized **Non-Local Means (NLM)** denoising algo
 
 This is an implementation of the [Monte Carlo Non-Local Means paper by Stanley H. Chan, Todd Zickler, Yue M. Lu](https://arxiv.org/pdf/1312.7366).
 
----
-
 ## Implementation
 The python implementation documentation is available [here](./mcnlm/README.md).
 
@@ -23,8 +21,6 @@ The python implementation documentation is available [here](./mcnlm/README.md).
 * **Spatial Locality**: Combines structural similarity with spatial proximity weights to preserve distinct features like stars or sharp edges.
 * **Noise Estimation (FFT)**: Includes a Fast Fourier Transform module to estimate unknown noise deviation ($\sigma$) in the frequency domain.
 
----
-
 ## Performance Summary
 
 The MCNLM algorithm achieves quality comparable to full NLM but at a fraction of the cost.
@@ -38,7 +34,6 @@ The MCNLM algorithm achieves quality comparable to full NLM but at a fraction of
 * **Diminishing Returns**: MSE drops rapidly with initial sampling.
 * **Reliability**: High reliability is maintained even with only 5% of samples.
 
----
 *Date: January 13, 2026* [cite: 4]
 
 ## Resources
